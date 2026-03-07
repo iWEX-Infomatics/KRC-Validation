@@ -44,10 +44,9 @@ def set_inr_account_in_supplier(doc, method=None):
     inr_account = frappe.db.get_value(
         "Account",
         {
-            "account_currency": "INR",
             "company": company,
-            "account_type": "Payable",
-            "is_group": 0
+            "is_group": 0,
+            "name": ["like", "%Creditors%"]
         },
         "name"
     )
@@ -63,11 +62,8 @@ def set_inr_account_in_supplier(doc, method=None):
 
     for row in doc.accounts:
 
-        if not row.company:
-            row.company = company
-
-        if not row.account:
-            row.account = inr_account
+        row.company = company
+        row.account = inr_account
 
 
 def set_supplier_defaults(doc, method=None):

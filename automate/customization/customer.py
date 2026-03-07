@@ -28,7 +28,6 @@ def update_customer_tax_category_from_address(doc, method=None):
                 update_data
             )
 
-
 def set_inr_account_in_customer(doc, method=None):
 
     company = frappe.db.get_value(
@@ -40,33 +39,29 @@ def set_inr_account_in_customer(doc, method=None):
     if not company:
         return
 
-    inr_account = frappe.db.get_value(
+    # Always fetch Debtors account
+    debtors_account = frappe.db.get_value(
         "Account",
         {
-            "account_currency": "INR",
             "company": company,
-            "account_type": "Receivable",
-            "is_group": 0
+            "is_group": 0,
+            "name": ["like", "%Debtors%"]
         },
         "name"
     )
 
-    if not inr_account:
+    if not debtors_account:
         return
 
     if not doc.accounts:
         row = doc.append("accounts", {})
         row.company = company
-        row.account = inr_account
+        row.account = debtors_account
         return
 
     for row in doc.accounts:
-
-        if not row.company:
-            row.company = company
-
-        if not row.account:
-            row.account = inr_account
+        row.company = company
+        row.account = debtors_account
 
 
 def set_customer_defaults(doc, method=None):
