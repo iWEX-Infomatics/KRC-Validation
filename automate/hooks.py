@@ -43,7 +43,22 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Supplier" : "public/js/supplier_name.js",
+    "Customer" : "public/js/customer_name.js",
+    "Contact" : "public/js/contact_name.js",
+    "Batch" : "public/js/batch_name.js",
+    "Employee" : "public/js/employee_name.js",
+    "Item" : "public/js/item_name.js",
+    "Item Group" : "public/js/item_group.js",
+    "Customer Group" : "public/js/customer_group.js",
+    "Supplier Group" : "public/js/supplier_group.js",
+    "Brand" : "public/js/brand.js",
+    "Terms and Conditions" : "public/js/terms.js",
+    "Payment Term" : "public/js/payment_terms.js",
+    "Payment Terms Template" : "public/js/payment_term_template.js",
+    "Bank Account" : "public/js/bank_account.js",
+    }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -136,15 +151,34 @@ app_license = "mit"
 # Document Events
 # ---------------
 # Hook on document methods and events
+doc_events = {
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+    "Supplier": {
+        "validate": [
+            "automate.customization.supplier.set_inr_account_in_supplier",
+            "automate.customization.supplier.set_supplier_defaults"
+        ]
+    },
 
+    "Customer": {
+        "validate": [
+            "automate.customization.customer.set_inr_account_in_customer",
+            "automate.customization.customer.set_customer_defaults"
+        ]
+    },
+
+    "Address": {
+        "after_insert": [
+            "automate.customization.supplier.set_supplier_tax_category_from_address",
+            "automate.customization.customer.update_customer_tax_category_from_address"
+        ],
+        "on_update": [
+            "automate.customization.supplier.set_supplier_tax_category_from_address",
+            "automate.customization.customer.update_customer_tax_category_from_address"
+        ]
+    }
+
+}
 # Scheduled Tasks
 # ---------------
 
