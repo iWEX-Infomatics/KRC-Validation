@@ -176,8 +176,12 @@ doc_events = {
             "automate.customization.supplier.set_supplier_tax_category_from_address",
             "automate.customization.customer.update_customer_tax_category_from_address"
         ]
+    },
+    "Item": {
+        "validate": [
+            "automate.customization.item.set_item_defaults"
+        ]
     }
-
 }
 # Scheduled Tasks
 # ---------------
