@@ -1,35 +1,5 @@
 import frappe
 
-
-def set_supplier_tax_category_from_address(doc, method=None):
-
-    links = frappe.get_all(
-        "Dynamic Link",
-        filters={
-            "parent": doc.name,
-            "link_doctype": "Supplier"
-        },
-        fields=["link_name"]
-    )
-
-    for link in links:
-
-        update_data = {}
-
-        if doc.tax_category:
-            update_data["tax_category"] = doc.tax_category
-
-        if doc.gstin:
-            update_data["gstin"] = doc.gstin
-
-        if update_data:
-            frappe.db.set_value(
-                "Supplier",
-                link.link_name,
-                update_data
-            )
-
-
 def set_inr_account_in_supplier(doc, method=None):
 
     company = frappe.db.get_value(

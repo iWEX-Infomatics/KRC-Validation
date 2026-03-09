@@ -167,16 +167,6 @@ doc_events = {
         ]
     },
 
-    "Address": {
-        "after_insert": [
-            "automate.customization.supplier.set_supplier_tax_category_from_address",
-            "automate.customization.customer.update_customer_tax_category_from_address"
-        ],
-        "on_update": [
-            "automate.customization.supplier.set_supplier_tax_category_from_address",
-            "automate.customization.customer.update_customer_tax_category_from_address"
-        ]
-    },
     "Item": {
         "validate": [
             "automate.customization.item.set_item_defaults"
