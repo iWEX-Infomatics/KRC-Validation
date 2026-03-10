@@ -72,7 +72,7 @@ const TextFormatter = {
 
     capitalizeWord(word) {
         const lower = word.toLowerCase();
-        return this.lowercaseWords.has(lower) ? lower : 
+        return this.lowercaseWords.has(lower) ? lower :
             lower.charAt(0).toUpperCase() + lower.slice(1);
     },
 
@@ -134,10 +134,10 @@ const Utils = {
     findOrCreateChildRow(frm, tableName, findCondition, defaultValues) {
         const table = frm.doc[tableName] || [];
         let existingRow = table.find(findCondition);
-        
+
         if (!existingRow) {
             let emptyRow = table.find(row => Object.values(defaultValues).every(val => !row[Object.keys(defaultValues).find(key => defaultValues[key] === val)]));
-            
+
             if (emptyRow) {
                 Object.entries(defaultValues).forEach(([key, value]) => {
                     frappe.model.set_value(emptyRow.doctype, emptyRow.name, key, value);
@@ -147,18 +147,18 @@ const Utils = {
                 existingRow = frm.add_child(tableName);
                 Object.assign(existingRow, defaultValues);
             }
-            
+
             frm.refresh_field(tableName);
         }
-        
+
         return existingRow;
     },
 
     validateMobileNumber(mobile) {
         if (!mobile) return { isValid: true };
-        
+
         const cleanMobile = String(mobile).replace(/\D/g, '');
-        
+
         if (cleanMobile.length !== 10) {
             return {
                 isValid: false,
@@ -166,7 +166,7 @@ const Utils = {
                 indicator: 'red'
             };
         }
-        
+
         if (!CONSTANTS.VALID_MOBILE_PREFIXES.has(cleanMobile[0])) {
             return {
                 isValid: false,
@@ -174,7 +174,7 @@ const Utils = {
                 indicator: 'orange'
             };
         }
-        
+
         return { isValid: true, cleanMobile: parseInt(cleanMobile) };
     }
 };
@@ -188,11 +188,8 @@ const CustomerLogic = {
             doctype: 'Address',
             name: frm.doc.customer_primary_address
         });
-        
-        if (!address || address.country !== "India") return;
 
-        // frm.set_value("default_currency", "INR");
-        // frm.set_value("default_price_list", "INR Selling");
+        if (!address || address.country !== "India") return;
 
         const [companyData, receivableAccounts, bankAccounts] = await Promise.all([
             Utils.makeAPICall("frappe.client.get_value", {
@@ -240,18 +237,18 @@ const CustomerLogic = {
 
     handleValidationChanges(frm) {
         const changes = [];
-        
+
         frm.meta.fields.forEach(field => {
-            if (!CONSTANTS.TEXT_FIELD_TYPES.has(field.fieldtype) || 
+            if (!CONSTANTS.TEXT_FIELD_TYPES.has(field.fieldtype) ||
                 frm._popup_shown_fields[field.fieldname]) return;
 
             const oldVal = frm._original_values[field.fieldname];
             const newVal = frm.doc[field.fieldname];
-            
+
             if (oldVal && newVal && oldVal !== newVal) {
                 const oldWords = oldVal.split(/\s+/);
                 const newWords = newVal.split(/\s+/);
-                
+
                 oldWords.forEach((word, idx) => {
                     if (newWords[idx] && word !== newWords[idx]) {
                         changes.push({
@@ -282,7 +279,7 @@ const CustomerLogic = {
                 doctype: 'Territory',
                 name: frm.doc.territory
             });
-            
+
             if (territoryDoc) {
                 const isInKerala = await this.checkTerritoryHierarchy(territoryDoc);
                 frm.set_value('tax_category', isInKerala ? 'In-State' : 'Out-State');
@@ -294,13 +291,13 @@ const CustomerLogic = {
 
     async checkTerritoryHierarchy(territoryDoc) {
         if (territoryDoc.name === 'Kerala') return true;
-        
+
         if (territoryDoc.parent_territory && territoryDoc.parent_territory !== 'All Territories') {
             const { message: parentDoc } = await Utils.makeAPICall('frappe.client.get', {
                 doctype: 'Territory',
                 name: territoryDoc.parent_territory
             });
-            
+
             if (parentDoc) {
                 if (parentDoc.name === 'Kerala') return true;
                 if (parentDoc.parent_territory && parentDoc.parent_territory !== 'All Territories') {
@@ -308,7 +305,7 @@ const CustomerLogic = {
                 }
             }
         }
-        
+
         return false;
     },
 
@@ -334,7 +331,7 @@ const CustomerLogic = {
         if (frm.doc.customer_type !== 'Individual' || !frm.doc.custom_mobile) return true;
 
         const validation = Utils.validateMobileNumber(frm.doc.custom_mobile);
-        
+
         if (!validation.isValid) {
             frappe.msgprint({
                 title: __('Invalid Mobile Number'),
@@ -355,10 +352,38 @@ const CustomerLogic = {
 
 // ================== Form Event Handlers ==================
 frappe.ui.form.on('Customer', {
+    default_currency: function (frm) {
+
+        if (!frm.doc.default_currency) {
+            frm.set_value("default_price_list", "");
+            return;
+        }
+
+        frappe.call({
+            method: "automate.customization.customer.get_price_list_from_currency",
+
+            args: {
+                party_type: "Supplier",
+                currency: frm.doc.default_currency
+            },
+            callback: function (r) {
+
+                if (r.message) {
+                    frm.set_value("default_price_list", r.message);
+                } else {
+                    frappe.msgprint(
+                        "No Price List configured for this currency in Settings for Automation"
+                    );
+                }
+
+            }
+        });
+
+    },
     onload(frm) {
         if (frm.is_new()) frm.set_value('custom_automate', 1);
         Utils.initializeFormValues(frm);
-        
+
         CustomerLogic.setCustomerGroup(frm);
         CustomerLogic.setTaxCategory(frm);
         CustomerLogic.setDefaultAccountsAndLimits(frm);
@@ -419,43 +444,43 @@ frappe.ui.form.on('Customer', {
 
 
 frappe.ui.form.on("Customer", {
-	onload(frm) {
-		if (frm.is_new()) frm.set_value("custom_automate", 1);
-	},
-	before_save(frm) {
-		if (frm.doc.custom_automate) frm.set_value("custom_automate", 0);
-	},
-	refresh: function (frm) {
-		sync_gstin_taxid(frm);
-	},
+    onload(frm) {
+        if (frm.is_new()) frm.set_value("custom_automate", 1);
+    },
+    before_save(frm) {
+        if (frm.doc.custom_automate) frm.set_value("custom_automate", 0);
+    },
+    refresh: function (frm) {
+        sync_gstin_taxid(frm);
+    },
 
-	gstin: function (frm) {
-		sync_gstin_taxid(frm);
-	},
+    gstin: function (frm) {
+        sync_gstin_taxid(frm);
+    },
 
-	tax_id: function (frm) {
-		sync_gstin_taxid(frm);
-	},
+    tax_id: function (frm) {
+        sync_gstin_taxid(frm);
+    },
 
 });
 
 function sync_gstin_taxid(frm) {
 
-	if (!frm.doc.gstin && !frm.doc.tax_id) {
-		return;
-	}
+    if (!frm.doc.gstin && !frm.doc.tax_id) {
+        return;
+    }
 
-	if (frm.doc.gstin && !frm.doc.tax_id) {
-		frm.set_value('tax_id', frm.doc.gstin);
-		return;
-	}
+    if (frm.doc.gstin && !frm.doc.tax_id) {
+        frm.set_value('tax_id', frm.doc.gstin);
+        return;
+    }
 
-	if (frm.doc.tax_id && !frm.doc.gstin) {
-		frm.set_value('gstin', frm.doc.tax_id);
-		return;
-	}
+    if (frm.doc.tax_id && !frm.doc.gstin) {
+        frm.set_value('gstin', frm.doc.tax_id);
+        return;
+    }
 
-	if (frm.doc.gstin && frm.doc.tax_id && frm.doc.gstin !== frm.doc.tax_id) {
-		frm.set_value('tax_id', frm.doc.gstin);
-	}
+    if (frm.doc.gstin && frm.doc.tax_id && frm.doc.gstin !== frm.doc.tax_id) {
+        frm.set_value('tax_id', frm.doc.gstin);
+    }
 }

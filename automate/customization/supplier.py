@@ -38,21 +38,42 @@ def set_inr_account_in_supplier(doc, method=None):
 
 def set_supplier_defaults(doc, method=None):
 
-    doc.default_currency = "INR"
+    if not doc.default_currency:
+        doc.default_currency = "INR"
 
-    price_list = frappe.db.get_value(
-        "Price List",
-        {
-            "buying": 1,
-            "currency": "INR",
-            "enabled": 1
-        },
-        "name"
-    )
+    if not doc.default_price_list and doc.default_currency == "INR":
 
-    if price_list:
-        doc.default_price_list = price_list
+        price_list = frappe.db.get_value(
+            "Price List",
+            {
+                "buying": 1,
+                "currency": "INR",
+                "enabled": 1
+            },
+            "name"
+        )
 
+        if price_list:
+            doc.default_price_list = price_list
+
+    if doc.default_currency and doc.default_currency != "INR":
+
+        custom_price_list = frappe.db.get_value(
+            "Price List Setting",
+            {
+                "parent": "Settings for Automation",
+                "party_type": "Supplier",
+                "currency": doc.default_currency
+            },
+            "price_list"
+        )
+
+        if not custom_price_list:
+            frappe.throw(
+                f"No Price List configured for Supplier with currency <b>{doc.default_currency}</b> in Settings for Automation."
+            )
+
+        doc.default_price_list = custom_price_list
 
 def update_supplier_tax_category_from_address(doc, method=None):
 
@@ -76,3 +97,19 @@ def update_supplier_tax_category_from_address(doc, method=None):
             "tax_category",
             doc.tax_category
         )
+    
+
+@frappe.whitelist()
+def get_price_list_from_currency(party_type, currency):
+
+    price_list = frappe.db.get_value(
+        "Price List Setting",
+        {
+            "parent": "Settings for Automation",
+            "party_type": party_type,
+            "currency": currency
+        },
+        "price_list"
+    )
+
+    return price_list

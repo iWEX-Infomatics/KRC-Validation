@@ -19,4 +19,15 @@ frappe.ui.form.on("Settings for Automation", {
             frm.set_value('custom_notifications', 1);
         }
     },
+        setup(frm) {
+
+        frm.set_query("party_type", "price_list_setting", function () {
+            return {
+                filters: {
+                    name: ["in", ["Supplier", "Customer"]]
+                }
+            };
+        });
+
+    }
 });

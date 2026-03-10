@@ -98,6 +98,34 @@ const TextFormatter = {
 
 // ======================= Supplier Form Events =======================
 frappe.ui.form.on('Supplier', {
+   default_currency: function (frm) {
+
+        if (!frm.doc.default_currency) {
+            frm.set_value("default_price_list", "");
+            return;
+        }
+
+        frappe.call({
+            method: "automate.customization.customer.get_price_list_from_currency",
+
+            args: {
+                party_type: "Supplier",
+                currency: frm.doc.default_currency
+            },
+            callback: function (r) {
+
+                if (r.message) {
+                    frm.set_value("default_price_list", r.message);
+                } else {
+                    frappe.msgprint(
+                        "No Price List configured for this currency in Settings for Automation"
+                    );
+                }
+
+            }
+        });
+
+    },
     onload(frm) {
         if (frm.is_new()) frm.set_value('custom_automate', 1);
         frm._original_values = {};
@@ -156,8 +184,7 @@ frappe.ui.form.on('Supplier', {
 
 // ======================= Helpers =======================
 function setIndianDefaults(frm, accountType) {
-    // frm.set_value('default_currency', 'INR');
-    // frm.set_value('default_price_list', 'INR Buying');
+
 
     frappe.call({
         method: 'frappe.client.get_value',
@@ -268,42 +295,42 @@ function checkForManualCorrection(frm, fieldname) {
 
 
 frappe.ui.form.on("Supplier", {
-	onload(frm) {
-		if (frm.is_new()) frm.set_value("custom_automate", 1);
-	},
-	before_save(frm) {
-		if (frm.doc.custom_automate) frm.set_value("custom_automate", 0);
-	},
-	refresh: function (frm) {
-		sync_gstin_taxid(frm);
-	},
+    onload(frm) {
+        if (frm.is_new()) frm.set_value("custom_automate", 1);
+    },
+    before_save(frm) {
+        if (frm.doc.custom_automate) frm.set_value("custom_automate", 0);
+    },
+    refresh: function (frm) {
+        sync_gstin_taxid(frm);
+    },
 
-	gstin: function (frm) {
-		sync_gstin_taxid(frm);
-	},
+    gstin: function (frm) {
+        sync_gstin_taxid(frm);
+    },
 
-	tax_id: function (frm) {
-		sync_gstin_taxid(frm);
-	}
+    tax_id: function (frm) {
+        sync_gstin_taxid(frm);
+    }
 });
 
 function sync_gstin_taxid(frm) {
 
-	if (!frm.doc.gstin && !frm.doc.tax_id) {
-		return;
-	}
+    if (!frm.doc.gstin && !frm.doc.tax_id) {
+        return;
+    }
 
-	if (frm.doc.gstin && !frm.doc.tax_id) {
-		frm.set_value('tax_id', frm.doc.gstin);
-		return;
-	}
+    if (frm.doc.gstin && !frm.doc.tax_id) {
+        frm.set_value('tax_id', frm.doc.gstin);
+        return;
+    }
 
-	if (frm.doc.tax_id && !frm.doc.gstin) {
-		frm.set_value('gstin', frm.doc.tax_id);
-		return;
-	}
+    if (frm.doc.tax_id && !frm.doc.gstin) {
+        frm.set_value('gstin', frm.doc.tax_id);
+        return;
+    }
 
-	if (frm.doc.gstin && frm.doc.tax_id && frm.doc.gstin !== frm.doc.tax_id) {
-		frm.set_value('tax_id', frm.doc.gstin);
-	}
+    if (frm.doc.gstin && frm.doc.tax_id && frm.doc.gstin !== frm.doc.tax_id) {
+        frm.set_value('tax_id', frm.doc.gstin);
+    }
 }
