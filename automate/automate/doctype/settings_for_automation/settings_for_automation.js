@@ -15,6 +15,8 @@ frappe.ui.form.on("Settings for Automation", {
             frm.set_value('enable_contact_automation', 1);
             frm.set_value('enable_address_automation', 1);
             frm.set_value('enable_customer_automation', 1);
+            frm.set_value('custom_email_account', 1);
+            frm.set_value('custom_notifications', 1);
         }
     },
 });

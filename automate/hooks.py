@@ -46,6 +46,8 @@ app_license = "mit"
 doctype_js = {
     "Supplier" : "public/js/supplier_name.js",
     "Customer" : "public/js/customer_name.js",
+    "Email Account":"public/js/email_account.js",
+    "Notification":"public/js/notifications.js",
     "Contact" : "public/js/contact_name.js",
     "Batch" : "public/js/batch_name.js",
     "Employee" : "public/js/employee_name.js",
