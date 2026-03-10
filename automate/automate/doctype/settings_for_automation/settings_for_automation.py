@@ -7,8 +7,3 @@ from frappe.model.document import Document
 
 class SettingsforAutomation(Document):
 	pass
-
-@frappe.whitelist()
-def get_automation_setting(field):
-    settings = frappe.get_cached_doc("Settings for Automation")
-    return settings.get(field)
