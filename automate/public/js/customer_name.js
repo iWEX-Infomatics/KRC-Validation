@@ -191,8 +191,8 @@ const CustomerLogic = {
         
         if (!address || address.country !== "India") return;
 
-        frm.set_value("default_currency", "INR");
-        frm.set_value("default_price_list", "INR Selling");
+        // frm.set_value("default_currency", "INR");
+        // frm.set_value("default_price_list", "INR Selling");
 
         const [companyData, receivableAccounts, bankAccounts] = await Promise.all([
             Utils.makeAPICall("frappe.client.get_value", {

@@ -156,8 +156,8 @@ frappe.ui.form.on('Supplier', {
 
 // ======================= Helpers =======================
 function setIndianDefaults(frm, accountType) {
-    frm.set_value('default_currency', 'INR');
-    frm.set_value('default_price_list', 'INR Buying');
+    // frm.set_value('default_currency', 'INR');
+    // frm.set_value('default_price_list', 'INR Buying');
 
     frappe.call({
         method: 'frappe.client.get_value',
