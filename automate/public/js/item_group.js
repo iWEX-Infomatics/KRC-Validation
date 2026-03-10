@@ -48,11 +48,10 @@ const FormHandler = {
         });
     },
 
-    checkAutomation(field, callback) {
-        if (!callback) return;
+   checkAutomation(field, callback) {
         frappe.call({
-            method: 'frappe.client.get_single_value',
-            args: { doctype: 'Settings for Automation', field },
+            method: 'automate.automate.doctype.settings_for_automation.settings_for_automation.get_automation_setting',
+            args: { field: field },
             callback: (res) => callback(!!res.message)
         });
     }

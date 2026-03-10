@@ -88,11 +88,8 @@ const FormHandler = {
 
     checkAutomation(field, callback) {
         frappe.call({
-            method: 'frappe.client.get_single_value',
-            args: {
-                doctype: 'Settings for Automation',
-                field: field
-            },
+            method: 'automate.automate.doctype.settings_for_automation.settings_for_automation.get_automation_setting',
+            args: { field: field },
             callback: (res) => callback(!!res.message)
         });
     },
@@ -104,7 +101,7 @@ const FormHandler = {
                 doctype: 'Settings for Automation',
                 name: 'Settings for Automation'
             },
-            callback: function(response) {
+            callback: function (response) {
                 if (response.message) {
                     callback({
                         enable_item_automation: response.message.enable_item_automation || 0,
@@ -131,7 +128,7 @@ const FormHandler = {
                     doctype: 'Settings for Automation',
                     field: field
                 },
-                callback: function(response) {
+                callback: function (response) {
                     settings[field] = response.message || 0;
                     completed++;
                     if (completed === fields.length) {
@@ -171,8 +168,8 @@ const ItemTextFormatter = {
     full(text, isItemName = false) {
         if (!text || text.endsWith(' ')) return text;
 
-        let formattedText = isItemName ? 
-            text.replace(/[^a-zA-Z0-9\s\-_]/g, '') : 
+        let formattedText = isItemName ?
+            text.replace(/[^a-zA-Z0-9\s\-_]/g, '') :
             text.replace(/[^a-zA-Z0-9\s\-]/g, '');
 
         formattedText = formattedText.trim().replace(/\s+/g, ' ');
@@ -227,8 +224,8 @@ frappe.ui.form.on('Item', {
 
     item_code(frm) {
         FormHandler.handleItemField(
-            frm, 
-            'item_code', 
+            frm,
+            'item_code',
             'item_code_automation',
             (text) => ItemTextFormatter.full(text, false),
             (text) => ItemTextFormatter.realTime(text, false)
@@ -237,8 +234,8 @@ frappe.ui.form.on('Item', {
 
     item_name(frm) {
         FormHandler.handleItemField(
-            frm, 
-            'item_name', 
+            frm,
+            'item_name',
             'item_name_automation',
             (text) => ItemTextFormatter.full(text, true),
             (text) => ItemTextFormatter.realTime(text, true)
@@ -253,8 +250,8 @@ frappe.ui.form.on('Item', {
 
     description(frm) {
         FormHandler.handleItemField(
-            frm, 
-            'description', 
+            frm,
+            'description',
             'description_automation',
             (text) => ItemTextFormatter.full(text, false),
             (text) => ItemTextFormatter.realTime(text, false)
@@ -297,7 +294,7 @@ frappe.ui.form.on('Item', {
             ['item_code', 'item_name', 'description'].forEach(field => {
                 checkForManualCorrection(frm, field);
             });
-            frm._correction_checked = true; 
+            frm._correction_checked = true;
         }
     }
 });
@@ -318,9 +315,9 @@ function checkForManualCorrection(frm, fieldname) {
                 const originalWord = oldWords[i];
                 const correctedWord = newWords[i];
 
-                frm._popup_shown_fields[fieldname] = true; 
+                frm._popup_shown_fields[fieldname] = true;
                 frappe.confirm(
-                    `You changed "<b>${originalWord}</b>" to "<b>${correctedWord}</b>" in <b>${fieldname.replace('_',' ')}</b>.<br><br>Do you want to add this to your Private Dictionary?`,
+                    `You changed "<b>${originalWord}</b>" to "<b>${correctedWord}</b>" in <b>${fieldname.replace('_', ' ')}</b>.<br><br>Do you want to add this to your Private Dictionary?`,
                     () => {
                         frappe.call({
                             method: "validation.validation.doctype.private_dictionary.private_dictionary.add_to_dictionary",
