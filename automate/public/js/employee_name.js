@@ -203,9 +203,6 @@ frappe.ui.form.on('Employee', {
     before_save(frm) {
         FormHandler.cleanup(frm, textFields);
         if (frm.doc.custom_automate) frm.set_value('custom_automate', 0);
-            if (address_popup_open) {
-        return;
-    }
     }
 });
 
@@ -468,73 +465,78 @@ function get_address_dialog(show_checkbox = true, address_type = "Current Addres
 
     setTimeout(() => {
 
-    // PINCODE EVENT
-    d.fields_dict.pincode.$input.on("keyup", function () {
+    let pincode_timer = null;
+
+    d.fields_dict.pincode.$input.on("input", function () {
+
+        clearTimeout(pincode_timer);
 
         let pincode = d.get_value("pincode");
         let country = d.get_value("country");
 
         if (!pincode || pincode.length !== 6 || country !== "India") return;
 
-        frappe.call({
+        pincode_timer = setTimeout(function () {
 
-            method: "pin_mate.customization.address.get_post_offices_api",
-            args: { pincode: pincode },
+            frappe.call({
 
-            callback(r) {
+                method: "pin_mate.customization.address.get_post_offices_api",
+                args: { pincode: pincode },
 
-                let offices = r.message;
+                callback(r) {
 
-                if (!offices || !offices.length) {
-                    frappe.msgprint("No Post Office Found");
-                    return;
+                    let offices = r.message;
+
+                    if (!offices || !offices.length) {
+                        frappe.msgprint("No Post Office Found");
+                        return;
+                    }
+
+                    if (offices.length === 1) {
+
+                        fill_address(d, offices[0]);
+
+                    } else {
+
+                        let options = offices.map((o, i) => ({
+                            label: o.post_office,
+                            value: i
+                        }));
+
+                        let select_dialog = new frappe.ui.Dialog({
+
+                            title: "Select Post Office",
+
+                            fields: [{
+                                fieldtype: "Select",
+                                fieldname: "po",
+                                label: "Post Office",
+                                options: options
+                            }],
+
+                            primary_action_label: "Select",
+
+                            primary_action(v) {
+
+                                fill_address(d, offices[v.po]);
+                                select_dialog.hide();
+
+                            }
+
+                        });
+
+                        select_dialog.show();
+                    }
+
                 }
 
-                if (offices.length === 1) {
+            });
 
-                    fill_address(d, offices[0]);
-
-                } else {
-
-                    let options = offices.map((o, i) => ({
-                        label: o.post_office,
-                        value: i
-                    }));
-
-                    let select_dialog = new frappe.ui.Dialog({
-
-                        title: "Select Post Office",
-
-                        fields: [{
-                            fieldtype: "Select",
-                            fieldname: "po",
-                            label: "Post Office",
-                            options: options
-                        }],
-
-                        primary_action_label: "Select",
-
-                        primary_action(v) {
-
-                            fill_address(d, offices[v.po]);
-                            select_dialog.hide();
-
-                        }
-
-                    });
-
-                    select_dialog.show();
-                }
-
-            }
-
-        });
+        }, 400); 
 
     });
 
-
-    // ADDRESS SPLIT
-    d.fields_dict.address_line1.$input.on("keyup", function () {
+    d.fields_dict.address_line1.$input.on("input", function () {
 
         let value = d.get_value("address_line1") || "";
 
