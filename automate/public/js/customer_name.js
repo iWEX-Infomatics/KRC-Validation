@@ -266,43 +266,43 @@ const CustomerLogic = {
         }
     },
 
-    async setTaxCategory(frm) {
-        if (frm.doc.customer_type !== 'Individual' || !frm.doc.territory) return;
+    // async setTaxCategory(frm) {
+    //     if (frm.doc.customer_type !== 'Individual' || !frm.doc.territory) return;
 
-        try {
-            const { message: territoryDoc } = await Utils.makeAPICall('frappe.client.get', {
-                doctype: 'Territory',
-                name: frm.doc.territory
-            });
+    //     try {
+    //         const { message: territoryDoc } = await Utils.makeAPICall('frappe.client.get', {
+    //             doctype: 'Territory',
+    //             name: frm.doc.territory
+    //         });
 
-            if (territoryDoc) {
-                const isInKerala = await this.checkTerritoryHierarchy(territoryDoc);
-                frm.set_value('tax_category', isInKerala ? 'In-State' : 'Out-State');
-            }
-        } catch (error) {
-            console.error('Tax category setting failed:', error);
-        }
-    },
+    //         if (territoryDoc) {
+    //             const isInKerala = await this.checkTerritoryHierarchy(territoryDoc);
+    //             frm.set_value('tax_category', isInKerala ? 'In-State' : 'Out-State');
+    //         }
+    //     } catch (error) {
+    //         console.error('Tax category setting failed:', error);
+    //     }
+    // },
 
-    async checkTerritoryHierarchy(territoryDoc) {
-        if (territoryDoc.name === 'Kerala') return true;
+    // async checkTerritoryHierarchy(territoryDoc) {
+    //     if (territoryDoc.name === 'Kerala') return true;
 
-        if (territoryDoc.parent_territory && territoryDoc.parent_territory !== 'All Territories') {
-            const { message: parentDoc } = await Utils.makeAPICall('frappe.client.get', {
-                doctype: 'Territory',
-                name: territoryDoc.parent_territory
-            });
+    //     if (territoryDoc.parent_territory && territoryDoc.parent_territory !== 'All Territories') {
+    //         const { message: parentDoc } = await Utils.makeAPICall('frappe.client.get', {
+    //             doctype: 'Territory',
+    //             name: territoryDoc.parent_territory
+    //         });
 
-            if (parentDoc) {
-                if (parentDoc.name === 'Kerala') return true;
-                if (parentDoc.parent_territory && parentDoc.parent_territory !== 'All Territories') {
-                    return await this.checkTerritoryHierarchy(parentDoc);
-                }
-            }
-        }
+    //         if (parentDoc) {
+    //             if (parentDoc.name === 'Kerala') return true;
+    //             if (parentDoc.parent_territory && parentDoc.parent_territory !== 'All Territories') {
+    //                 return await this.checkTerritoryHierarchy(parentDoc);
+    //             }
+    //         }
+    //     }
 
-        return false;
-    },
+    //     return false;
+    // },
 
     setDefaultAccountsAndLimits(frm) {
         if (frm.doc.customer_type !== 'Individual') return;
