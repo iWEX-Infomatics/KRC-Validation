@@ -1,5 +1,6 @@
 import frappe
 
+
 def set_inr_account_in_customer(doc, method=None):
 
     company = frappe.db.get_value(
@@ -24,15 +25,23 @@ def set_inr_account_in_customer(doc, method=None):
     if not debtors_account:
         return
 
+    # Accounts child table
     if not doc.accounts:
         row = doc.append("accounts", {})
         row.company = company
         row.account = debtors_account
-        return
+    else:
+        for row in doc.accounts:
+            row.company = company
+            row.account = debtors_account
 
-    for row in doc.accounts:
+    # Credit Limits child table
+    if not doc.credit_limits:
+        row = doc.append("credit_limits", {})
         row.company = company
-        row.account = debtors_account
+    else:
+        for row in doc.credit_limits:
+            row.company = company
 
 
 

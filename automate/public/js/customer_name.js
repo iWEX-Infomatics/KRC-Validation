@@ -99,6 +99,12 @@ const TextFormatter = {
     }
 };
 
+// ================== Constants ==================
+const CONSTANTS = {
+    TEXT_FIELD_TYPES: new Set(["Data", "Small Text", "Text", "Long Text", "Text Editor"]),
+    VALID_MOBILE_PREFIXES: new Set(['6', '7', '8', '9']),
+    AUTOMATION_FIELDS: ['customer_name', 'customer_details']
+};
 
 // ================== Utility Functions ==================
 const Utils = {
@@ -125,25 +131,22 @@ const Utils = {
 
     findOrCreateChildRow(frm, tableName, findCondition, defaultValues) {
         const table = frm.doc[tableName] || [];
+
         let existingRow = table.find(findCondition);
+        if (existingRow) return existingRow;
 
-        if (!existingRow) {
-            let emptyRow = table.find(row => Object.values(defaultValues).every(val => !row[Object.keys(defaultValues).find(key => defaultValues[key] === val)]));
+        let emptyRow = table.find(row => !row.company && !row.account);
 
-            if (emptyRow) {
-                Object.entries(defaultValues).forEach(([key, value]) => {
-                    frappe.model.set_value(emptyRow.doctype, emptyRow.name, key, value);
-                });
-                existingRow = emptyRow;
-            } else {
-                existingRow = frm.add_child(tableName);
-                Object.assign(existingRow, defaultValues);
-            }
-
-            frm.refresh_field(tableName);
+        if (emptyRow) {
+            Object.assign(emptyRow, defaultValues);
+        } else if (table.length === 0) {
+            let row = frm.add_child(tableName);
+            Object.assign(row, defaultValues);
+            emptyRow = row;
         }
 
-        return existingRow;
+        frm.refresh_field(tableName);
+        return emptyRow;
     },
 
     validateMobileNumber(mobile) {
