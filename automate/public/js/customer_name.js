@@ -99,14 +99,6 @@ const TextFormatter = {
     }
 };
 
-// ================== Constants ==================
-const CONSTANTS = {
-    COMPANY: "Auraspace Traders Pvt Ltd",
-    ACCOUNT: "Debtors INR - AT",
-    TEXT_FIELD_TYPES: new Set(["Data", "Small Text", "Text", "Long Text", "Text Editor"]),
-    VALID_MOBILE_PREFIXES: new Set(['6', '7', '8', '9']),
-    AUTOMATION_FIELDS: ['customer_name', 'customer_details']
-};
 
 // ================== Utility Functions ==================
 const Utils = {
