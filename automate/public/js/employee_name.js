@@ -9,28 +9,21 @@ const FormHandler = {
 
     handle(frm, fieldname, automationField, formatFunction, realTimeFunction) {
         if (!frm.doc.custom_automate) return;
-        const val = frm.doc[fieldname] || '';
 
-        this.checkAutomation(automationField, (enabled) => {
-            if (enabled) {
-                const rtFormatted = realTimeFunction(val);
-                if (val !== rtFormatted) {
-                    frm.set_value(fieldname, rtFormatted);
-                    return;
-                }
-            }
-        });
 
         clearTimeout(this.timeouts[fieldname]);
         this.timeouts[fieldname] = setTimeout(() => {
             this.checkAutomation(automationField, (enabled) => {
-                if (enabled) {
-                    const valueToFormat = frm.doc[fieldname] || '';
-                    if (this.lastValues[fieldname] === valueToFormat) return;
-                    const formatted = formatFunction(valueToFormat);
-                    this.lastValues[fieldname] = formatted;
-                    if (valueToFormat !== formatted) frm.set_value(fieldname, formatted);
-                }
+                if (!enabled) return;
+
+                const value = frm.doc[fieldname] || '';
+                if (this.lastValues[fieldname] === value) return;
+
+                if (value.endsWith(' ')) return;
+
+                const formatted = formatFunction(value);
+                this.lastValues[fieldname] = formatted;
+                if (value !== formatted) frm.set_value(fieldname, formatted);
             });
         }, 300);
     },
@@ -249,19 +242,19 @@ frappe.ui.form.on("Employee", {
         //     return;
         // }
 
-    if (!frm.doc.current_address && !frm.doc.permanent_address) {
+        if (!frm.doc.current_address && !frm.doc.permanent_address) {
 
-        frappe.validated = false;
-        open_current_address_popup(frm);
-        return;
-    }
+            frappe.validated = false;
+            open_current_address_popup(frm);
+            return;
+        }
 
-    if (frm.doc.current_address && !frm.doc.permanent_address) {
+        if (frm.doc.current_address && !frm.doc.permanent_address) {
 
-        frappe.validated = false;
-        open_permanent_address_popup(frm);
-        return;
-    }
+            frappe.validated = false;
+            open_permanent_address_popup(frm);
+            return;
+        }
 
     }
 
@@ -302,9 +295,9 @@ function open_current_address_popup(frm) {
 
     let d = get_address_dialog(true, "Current Address");
 
-    d.set_primary_action("Insert",async function(values) {
+    d.set_primary_action("Insert", async function (values) {
 
-         let address = await format_india_address(values);
+        let address = await format_india_address(values);
 
         frm.set_value("current_address", address);
 
@@ -341,9 +334,9 @@ function open_permanent_address_popup(frm) {
 
     let d = get_address_dialog(false, "Permanent Address");
 
-    d.set_primary_action("Insert", async function(values) {
+    d.set_primary_action("Insert", async function (values) {
 
-         let address = await format_india_address(values);
+        let address = await format_india_address(values);
 
         frm.set_value("permanent_address", address);
 
@@ -465,90 +458,90 @@ function get_address_dialog(show_checkbox = true, address_type = "Current Addres
 
     setTimeout(() => {
 
-    let pincode_timer = null;
+        let pincode_timer = null;
 
-    d.fields_dict.pincode.$input.on("input", function () {
+        d.fields_dict.pincode.$input.on("input", function () {
 
-        clearTimeout(pincode_timer);
+            clearTimeout(pincode_timer);
 
-        let pincode = d.get_value("pincode");
-        let country = d.get_value("country");
+            let pincode = d.get_value("pincode");
+            let country = d.get_value("country");
 
-        if (!pincode || pincode.length !== 6 || country !== "India") return;
+            if (!pincode || pincode.length !== 6 || country !== "India") return;
 
-        pincode_timer = setTimeout(function () {
+            pincode_timer = setTimeout(function () {
 
-            frappe.call({
+                frappe.call({
 
-                method: "pin_mate.customization.address.get_post_offices_api",
-                args: { pincode: pincode },
+                    method: "pin_mate.customization.address.get_post_offices_api",
+                    args: { pincode: pincode },
 
-                callback(r) {
+                    callback(r) {
 
-                    let offices = r.message;
+                        let offices = r.message;
 
-                    if (!offices || !offices.length) {
-                        frappe.msgprint("No Post Office Found");
-                        return;
+                        if (!offices || !offices.length) {
+                            frappe.msgprint("No Post Office Found");
+                            return;
+                        }
+
+                        if (offices.length === 1) {
+
+                            fill_address(d, offices[0]);
+
+                        } else {
+
+                            let options = offices.map((o, i) => ({
+                                label: o.post_office,
+                                value: i
+                            }));
+
+                            let select_dialog = new frappe.ui.Dialog({
+
+                                title: "Select Post Office",
+
+                                fields: [{
+                                    fieldtype: "Select",
+                                    fieldname: "po",
+                                    label: "Post Office",
+                                    options: options
+                                }],
+
+                                primary_action_label: "Select",
+
+                                primary_action(v) {
+
+                                    fill_address(d, offices[v.po]);
+                                    select_dialog.hide();
+
+                                }
+
+                            });
+
+                            select_dialog.show();
+                        }
+
                     }
 
-                    if (offices.length === 1) {
+                });
 
-                        fill_address(d, offices[0]);
+            }, 400);
 
-                    } else {
+        });
 
-                        let options = offices.map((o, i) => ({
-                            label: o.post_office,
-                            value: i
-                        }));
+        d.fields_dict.address_line1.$input.on("input", function () {
 
-                        let select_dialog = new frappe.ui.Dialog({
+            let value = d.get_value("address_line1") || "";
 
-                            title: "Select Post Office",
+            if (value.length > 40) {
+                d.set_df_property("address_line2", "hidden", 0);
+            } else {
+                d.set_df_property("address_line2", "hidden", 1);
+            }
 
-                            fields: [{
-                                fieldtype: "Select",
-                                fieldname: "po",
-                                label: "Post Office",
-                                options: options
-                            }],
+        });
 
-                            primary_action_label: "Select",
-
-                            primary_action(v) {
-
-                                fill_address(d, offices[v.po]);
-                                select_dialog.hide();
-
-                            }
-
-                        });
-
-                        select_dialog.show();
-                    }
-
-                }
-
-            });
-
-        }, 400); 
-
-    });
-
-    d.fields_dict.address_line1.$input.on("input", function () {
-
-        let value = d.get_value("address_line1") || "";
-
-        if (value.length > 40) {
-            d.set_df_property("address_line2", "hidden", 0);
-        } else {
-            d.set_df_property("address_line2", "hidden", 1);
-        }
-
-    });
-
-}, 300);
+    }, 300);
 
     return d;
 

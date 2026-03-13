@@ -165,48 +165,25 @@ function handle_name_field(frm, fieldname) {
 
     if (!frm.doc.custom_automate) return;
 
-    const currentValue = frm.doc[fieldname] || '';
-
-    if (frm._automation_enabled) {
-
-        const rtFormatted = format_name(currentValue, true);
-
-        if (currentValue !== rtFormatted) {
-
-            frm.set_value(fieldname, rtFormatted);
-
-            return update_full_name(frm);
-
-        }
-
-    }
-
     clearTimeout(debounceTimeouts[fieldname]);
 
     debounceTimeouts[fieldname] = setTimeout(() => {
 
-        if (frm._automation_enabled) {
+        if (!frm._automation_enabled) return;
 
-            const val = frm.doc[fieldname] || '';
+        const val = frm.doc[fieldname] || '';
 
-            if (lastProcessedValues[fieldname] === val) return;
+        if (lastProcessedValues[fieldname] === val) return;
 
-            const formatted = format_name(val);
+        if (val.endsWith(' ')) return;
 
-            if (val !== formatted) {
+        const formatted = format_name(val);
 
-                lastProcessedValues[fieldname] = formatted;
+        lastProcessedValues[fieldname] = formatted;
 
-                frm.set_value(fieldname, formatted);
-
-                update_full_name(frm);
-
-            } else {
-
-                lastProcessedValues[fieldname] = val;
-
-            }
-
+        if (val !== formatted) {
+            frm.set_value(fieldname, formatted);
+            update_full_name(frm);
         }
 
     }, 300);

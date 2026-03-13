@@ -60,21 +60,22 @@ const ItemTextFormatter = {
      * isItemName=true → every word Title-Cased (no lowercase exceptions)
      * isItemName=false → standard title-case with lowercaseWords exceptions
      */
-    realTime(text, isItemName = false) {
-        if (!text) return text;
+realTime(text, isItemName = false) {
+    if (!text) return text;
 
-        const words = text.split(' ');
-        const lastIdx = words.length - 1;
+    const trailingSpaces = text.match(/\s+$/)?.[0] || '';
 
-        return words.map((word, idx) => {
-            if (!word) return word;
+    const words = text.split(' ');
+    const lastIdx = words.length - 1;
 
-            // Don't touch the word user is currently typing (last word, no trailing space)
-            if (idx === lastIdx && !text.endsWith(' ')) return word;
+    const formatted = words.map((word, idx) => {
+        if (!word) return word;
+        if (idx === lastIdx && !text.endsWith(' ')) return word;
+        return this._formatWord(word, idx, isItemName);
+    }).join(' ');
 
-            return this._formatWord(word, idx, isItemName);
-        }).join(' ');
-    },
+    return formatted + trailingSpaces; 
+},
 
     /**
      * full — called after debounce (user paused / field blur).
@@ -132,44 +133,34 @@ const FormHandler = {
      * Unified field handler.
      * settingKey: the automation flag in Settings for Automation that DISABLES formatting.
      */
-    handleItemField(frm, fieldname, settingKey, formatFn, realTimeFn) {
-        if (!frm.doc.custom_automate) return;
+handleItemField(frm, fieldname, settingKey, formatFn, realTimeFn) {
+    if (!frm.doc.custom_automate) return;
 
-        const currentValue = frm.doc[fieldname] || '';
 
-        // ── Real-time pass (instant, no delay) ──────────────────────────────
+    clearTimeout(this.timeouts[fieldname]);
+    this.timeouts[fieldname] = setTimeout(() => {
         AutomationSettings.get((s) => {
-            if (s.enable_item_automation && !s[settingKey]) {
-                const formatted = realTimeFn(currentValue);
-                if (formatted !== currentValue) frm.set_value(fieldname, formatted);
-            }
+            if (!s.enable_item_automation || s[settingKey]) return;
+
+            const value = frm.doc[fieldname] || '';
+            if (this.lastValues[fieldname] === value) return;
+
+            if (value.endsWith(' ')) return;
+
+            const formatted = formatFn(value);
+            this.lastValues[fieldname] = formatted;
+            if (formatted !== value) frm.set_value(fieldname, formatted);
         });
-
-        // ── Debounced full-format pass ───────────────────────────────────────
-        clearTimeout(this.timeouts[fieldname]);
-        this.timeouts[fieldname] = setTimeout(() => {
-            AutomationSettings.get((s) => {
-                if (!s.enable_item_automation || s[settingKey]) return;
-
-                const value = frm.doc[fieldname] || '';
-                if (this.lastValues[fieldname] === value) return;
-
-                const formatted = formatFn(value);
-                this.lastValues[fieldname] = formatted !== value ? formatted : value;
-                if (formatted !== value) frm.set_value(fieldname, formatted);
-            });
-        }, 300);
-    },
-
+    }, 300);
+},
     cleanup(frm, fields) {
-        // Cancel all pending debounces before save
         Object.values(this.timeouts).forEach(clearTimeout);
         this.timeouts = {};
 
         fields.forEach(field => {
             const val = frm.doc[field];
             if (!val) return;
-            const cleaned = val.replace(/[,\s]+$/, '').trim();
+            const cleaned = val.replace(/^\s+/, '').replace(/[,\s]+$/, '').trim();
             if (cleaned !== val) frm.set_value(field, cleaned);
         });
     }

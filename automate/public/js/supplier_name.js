@@ -6,35 +6,20 @@ const FormHandler = {
     handle(frm, fieldname, automationField, formatFn, realtimeFn) {
         if (!frm.doc.custom_automate) return;
 
-        const currentValue = frm.doc[fieldname] || '';
 
-        // Realtime formatting
-        this.checkAutomation(automationField, (enabled) => {
-            if (enabled) {
-                const formatted = realtimeFn(currentValue);
-                if (currentValue !== formatted) {
-                    frm.set_value(fieldname, formatted);
-                    return;
-                }
-            }
-        });
-
-        // Debounced full formatting
         clearTimeout(this.timeouts[fieldname]);
         this.timeouts[fieldname] = setTimeout(() => {
             this.checkAutomation(automationField, (enabled) => {
                 if (!enabled) return;
 
-                const valueToFormat = frm.doc[fieldname] || '';
-                if (this.lastValues[fieldname] === valueToFormat) return;
+                const value = frm.doc[fieldname] || '';
+                if (this.lastValues[fieldname] === value) return;
 
-                const formatted = formatFn(valueToFormat);
+                if (value.endsWith(' ')) return;
+
+                const formatted = formatFn(value);
                 this.lastValues[fieldname] = formatted;
-                if (valueToFormat !== formatted) {
-                    frm.set_value(fieldname, formatted);
-                }
-
-                // Manual correction check moved to before_save
+                if (value !== formatted) frm.set_value(fieldname, formatted);
             });
         }, 300);
     },
@@ -98,7 +83,7 @@ const TextFormatter = {
 
 // ======================= Supplier Form Events =======================
 frappe.ui.form.on('Supplier', {
-   default_currency: function (frm) {
+    default_currency: function (frm) {
 
         if (!frm.doc.default_currency) {
             frm.set_value("default_price_list", "");

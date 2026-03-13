@@ -128,8 +128,14 @@ async function setDefaultAccounts(frm) {
 
 // ================= Automation Formatter =================
 
-async function handleAutomation(frm, field, allowNumber = false) {
+// ================= Automation Formatter =================
 
+const CustomerFormHandler = {
+    timeouts: {},
+    lastValues: {}
+};
+
+async function handleAutomation(frm, field) {
     if (!frm.doc.custom_automate) return;
 
     let enabled = await frappe.db.get_single_value(
@@ -139,16 +145,23 @@ async function handleAutomation(frm, field, allowNumber = false) {
 
     if (!enabled) return;
 
-    let value = frm.doc[field];
-    if (!value) return;
+    clearTimeout(CustomerFormHandler.timeouts[field]);
+    CustomerFormHandler.timeouts[field] = setTimeout(() => {
 
-    let formatted = capitalizeWords(value);
+        const value = frm.doc[field];
+        if (!value) return;
 
-    if (value !== formatted) {
-        frm.set_value(field, formatted);
-    }
+        if (value.endsWith(' ')) return;
+
+        if (CustomerFormHandler.lastValues[field] === value) return;
+
+        const formatted = capitalizeWords(value);
+        CustomerFormHandler.lastValues[field] = formatted;
+
+        if (formatted !== value) frm.set_value(field, formatted);
+
+    }, 300);
 }
-
 
 
 // ================= Customer Events =================
@@ -254,12 +267,20 @@ frappe.ui.form.on("Customer", {
     },
 
 
-    before_save(frm) {
+before_save(frm) {
+    Object.values(CustomerFormHandler.timeouts).forEach(clearTimeout);
+    CustomerFormHandler.timeouts = {};
 
-        if (frm.doc.custom_automate) {
-            frm.set_value("custom_automate", 0);
-        }
+    ['customer_name', 'customer_details'].forEach(field => {
+        const val = frm.doc[field];
+        if (!val) return;
+        const cleaned = val.replace(/[,\s]+$/, '').trim();
+        if (cleaned !== val) frm.set_value(field, cleaned);
+    });
 
+    if (frm.doc.custom_automate) {
+        frm.set_value("custom_automate", 0);
     }
+}
 
 });
