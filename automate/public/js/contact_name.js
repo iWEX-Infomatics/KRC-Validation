@@ -37,7 +37,7 @@ frappe.ui.form.on('Contact', {
                 () => {
 
                     frappe.call({
-                        method: "validation.validation.doctype.private_dictionary.private_dictionary.add_to_dictionary",
+                        method: "automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary",
                         args: {
                             original,
                             corrected

@@ -259,7 +259,7 @@ function checkForManualCorrection(frm, fieldname) {
                 `You corrected "<b>${original}</b>" to "<b>${corrected}</b>".<br><br>Do you want to add it to your Private Dictionary?`,
                 () => {
                     frappe.call({
-                        method: 'validation.validation.doctype.private_dictionary.private_dictionary.add_to_dictionary',
+                        method: 'automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary',
                         args: { original, corrected },
                         callback: () => {
                             frappe.show_alert('Word added to Private Dictionary!');

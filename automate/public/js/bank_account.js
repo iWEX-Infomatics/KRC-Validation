@@ -155,7 +155,7 @@ frappe.ui.form.on('Bank Account', {
             `You corrected "<b>${change.original}</b>" to "<b>${change.corrected}</b>".<br><br>Do you want to add it to your Private Dictionary?`,
             () => {
                 frappe.call({
-                    method: "validation.validation.doctype.private_dictionary.private_dictionary.add_to_dictionary",
+                    method: "automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary",
                     args: {
                         original: change.original,
                         corrected: change.corrected

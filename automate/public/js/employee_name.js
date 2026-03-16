@@ -117,7 +117,7 @@ function update_employee_name(frm) {
 
 function addPrivateDictionary(original, corrected) {
     frappe.call({
-        method: "validation.validation.doctype.private_dictionary.private_dictionary.add_to_dictionary",
+        method: "automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary",
         args: { original, corrected },
         callback: () => frappe.show_alert("Word added to Private Dictionary!")
     });

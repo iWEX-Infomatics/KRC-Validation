@@ -277,7 +277,7 @@ function checkForManualCorrection(frm, fieldname) {
                 `You changed "<b>${oldWords[i]}</b>" to "<b>${newWords[i]}</b>" in <b>${fieldname.replace(/_/g, ' ')}</b>.<br><br>Do you want to add this to your Private Dictionary?`,
                 () => {
                     frappe.call({
-                        method: 'validation.validation.doctype.private_dictionary.private_dictionary.add_to_dictionary',
+                        method: 'automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary',
                         args: { original: oldWords[i], corrected: newWords[i] },
                         callback: () => {
                             frappe.show_alert('Added to Private Dictionary');
