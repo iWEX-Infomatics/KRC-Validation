@@ -2,6 +2,9 @@ import frappe
 
 def set_item_defaults(doc, method=None):
 
+    if not doc.custom_is_item_default:
+        return
+
     price_list = None
     expense_account = None
     income_account = None
