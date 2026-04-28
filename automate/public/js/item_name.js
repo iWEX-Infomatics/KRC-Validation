@@ -181,6 +181,9 @@ frappe.ui.form.on('Item', {
         _captureOriginals(frm);
         frm._popup_shown_fields = {};
         frm._correction_checked = false;
+        if (frm.is_new() && !frm.doc.custom_is_item_default) {
+            frm.set_value('custom_is_item_default', 1);
+        }
     },
 
     refresh(frm) {
