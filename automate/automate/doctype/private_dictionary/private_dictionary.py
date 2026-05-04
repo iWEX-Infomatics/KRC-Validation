@@ -46,23 +46,23 @@ def global_validate_replacement(doc, method):
                         "replacements": replacements
                     })
 
-@frappe.whitelist()
-def add_to_dictionary(original, corrected):
-    if not original or not corrected:
-        frappe.throw("Original and corrected words are required.")
+# @frappe.whitelist()
+# def add_to_dictionary(original, corrected):
+#     if not original or not corrected:
+#         frappe.throw("Original and corrected words are required.")
 
-    dictionary_doc = frappe.get_single('Private Dictionary')
+#     dictionary_doc = frappe.get_single('Private Dictionary')
     
-    for row in dictionary_doc.dictionary:
-        if row.original_name == original and row.suggested_name == corrected:
-            return "Already exists."
+#     for row in dictionary_doc.dictionary:
+#         if row.original_name == original and row.suggested_name == corrected:
+#             return "Already exists."
 
-    dictionary_doc.append("dictionary", {
-        "original_name": original,
-        "suggested_name": corrected
-    })
-    dictionary_doc.save(ignore_permissions=True)
+#     dictionary_doc.append("dictionary", {
+#         "original_name": original,
+#         "suggested_name": corrected
+#     })
+#     dictionary_doc.save(ignore_permissions=True)
 
-    return "Inserted"
+#     return "Inserted"
 
 

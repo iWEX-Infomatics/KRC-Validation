@@ -32,32 +32,32 @@ frappe.ui.form.on('Contact', {
 
             const { original, corrected, fieldname } = changes[0];
 
-            frappe.confirm(
-                `You corrected "<b>${original}</b>" to "<b>${corrected}</b>".<br><br>Do you want to add it to your Private Dictionary?`,
-                () => {
+            // frappe.confirm(
+            //     `You corrected "<b>${original}</b>" to "<b>${corrected}</b>".<br><br>Do you want to add it to your Private Dictionary?`,
+            //     () => {
 
-                    frappe.call({
-                        method: "automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary",
-                        args: {
-                            original,
-                            corrected
-                        },
-                        callback: () => {
-                            frappe.show_alert("Word added to Private Dictionary!");
-                            frm.reload_doc();
-                        }
-                    });
+            //         frappe.call({
+            //             method: "automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary",
+            //             args: {
+            //                 original,
+            //                 corrected
+            //             },
+            //             callback: () => {
+            //                 frappe.show_alert("Word added to Private Dictionary!");
+            //                 frm.reload_doc();
+            //             }
+            //         });
 
-                    frm._confirmed_fields[fieldname] = true;
+            //         frm._confirmed_fields[fieldname] = true;
 
-                },
-                () => {
+            //     },
+            //     () => {
 
-                    frappe.show_alert("Skipped adding to dictionary.");
-                    frm._confirmed_fields[fieldname] = true;
+            //         frappe.show_alert("Skipped adding to dictionary.");
+            //         frm._confirmed_fields[fieldname] = true;
 
-                }
-            );
+            //     }
+            // );
 
         }
 

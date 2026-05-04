@@ -115,13 +115,13 @@ function update_employee_name(frm) {
     frm.set_value('employee_name', [frm.doc.first_name, frm.doc.middle_name, frm.doc.last_name].filter(Boolean).join(' '));
 }
 
-function addPrivateDictionary(original, corrected) {
-    frappe.call({
-        method: "automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary",
-        args: { original, corrected },
-        callback: () => frappe.show_alert("Word added to Private Dictionary!")
-    });
-}
+// function addPrivateDictionary(original, corrected) {
+//     frappe.call({
+//         method: "automate.automate.doctype.private_dictionary.private_dictionary.add_to_dictionary",
+//         args: { original, corrected },
+//         callback: () => frappe.show_alert("Word added to Private Dictionary!")
+//     });
+// }
 
 const textFields = [
     'first_name', 'middle_name', 'last_name',
@@ -170,11 +170,11 @@ frappe.ui.form.on('Employee', {
         if (changes.length) {
             const { fieldname, original, corrected } = changes[0];
             frm._popup_shown_fields[fieldname] = true;
-            frappe.confirm(
-                `You corrected "<b>${original}</b>" to "<b>${corrected}</b>".<br><br>Do you want to add it to your Private Dictionary?`,
-                () => addPrivateDictionary(original, corrected),
-                () => frappe.show_alert("Skipped adding to dictionary.")
-            );
+            // frappe.confirm(
+            //     `You corrected "<b>${original}</b>" to "<b>${corrected}</b>".<br><br>Do you want to add it to your Private Dictionary?`,
+            //     () => addPrivateDictionary(original, corrected),
+            //     () => frappe.show_alert("Skipped adding to dictionary.")
+            // );
         }
     },
 
