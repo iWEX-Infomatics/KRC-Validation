@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────
-//  Settings Cache — single fetch, reused always
-// ─────────────────────────────────────────────
+
 const AutomationSettings = {
     _cache: null,
     _fetching: false,
@@ -18,16 +16,15 @@ const AutomationSettings = {
             args: { doctype: 'Settings for Automation', name: 'Settings for Automation' },
             callback: (res) => {
                 this._cache = res.message ? {
-                    enable_item_automation:  res.message.enable_item_automation  || 0,
-                    item_code_automation:    res.message.item_code_automation    || 0,
-                    item_name_automation:    res.message.item_name_automation    || 0,
-                    description_automation:  res.message.description_automation  || 0,
+                    enable_item_automation: res.message.enable_item_automation || 0,
+                    item_code_automation: res.message.item_code_automation || 0,
+                    item_name_automation: res.message.item_name_automation || 0,
+                    description_automation: res.message.description_automation || 0,
                 } : {
                     enable_item_automation: 0, item_code_automation: 0,
-                    item_name_automation: 0,   description_automation: 0,
+                    item_name_automation: 0, description_automation: 0,
                 };
 
-                // TTL: 60 seconds — stale cache auto-clear
                 setTimeout(() => { this._cache = null; }, 60000);
 
                 this._fetching = false;
@@ -37,7 +34,6 @@ const AutomationSettings = {
         });
     },
 
-    // Call this if settings change mid-session
     invalidate() { this._cache = null; }
 };
 
@@ -45,8 +41,7 @@ const AutomationSettings = {
 //  Text Formatter
 // ─────────────────────────────────────────────
 const ItemTextFormatter = {
-    // Words to keep lowercase — only for item_code / description (NOT item_name)
-    lowercaseWords: new Set(['a','an','the','and','but','or','for','nor','on','at','to','from','by','in','of','with']),
+    lowercaseWords: new Set(['a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'from', 'by', 'in', 'of', 'with']),
 
     _capitalize(word, keepOriginalCase) {
         if (!word) return word;
@@ -54,46 +49,37 @@ const ItemTextFormatter = {
         return word.charAt(0).toUpperCase() + rest;
     },
 
-    /**
-     * realTime — called on every keystroke.
-     * Does NOT touch the last word while user is still typing (no trailing-space yet).
-     * isItemName=true → every word Title-Cased (no lowercase exceptions)
-     * isItemName=false → standard title-case with lowercaseWords exceptions
-     */
-realTime(text, isItemName = false) {
-    if (!text) return text;
 
-    const trailingSpaces = text.match(/\s+$/)?.[0] || '';
+    realTime(text, isItemName = false) {
+        if (!text) return text;
 
-    const words = text.split(' ');
-    const lastIdx = words.length - 1;
+        const trailingSpaces = text.match(/\s+$/)?.[0] || '';
 
-    const formatted = words.map((word, idx) => {
-        if (!word) return word;
-        if (idx === lastIdx && !text.endsWith(' ')) return word;
-        return this._formatWord(word, idx, isItemName);
-    }).join(' ');
+        const words = text.split(' ');
+        const lastIdx = words.length - 1;
 
-    return formatted + trailingSpaces; 
-},
+        const formatted = words.map((word, idx) => {
+            if (!word) return word;
+            if (idx === lastIdx && !text.endsWith(' ')) return word;
+            return this._formatWord(word, idx, isItemName);
+        }).join(' ');
 
-    /**
-     * full — called after debounce (user paused / field blur).
-     * Strips invalid chars, collapses spaces, then formats all words.
-     */
+        return formatted + trailingSpaces;
+    },
+
+  
     full(text, isItemName = false) {
         if (!text) return text;
 
-        // Strip invalid chars
         let out = isItemName
             ? text.replace(/[^a-zA-Z0-9\s\-_]/g, '')
             : text.replace(/[^a-zA-Z0-9\s\-]/g, '');
 
         out = out
             .trim()
-            .replace(/\s+/g, ' ')           // collapse spaces
-            .replace(/[,\s]+$/, '')          // trailing comma/space
-            .replace(/\s*\(\s*/g, ' (');     // normalise opening paren spacing
+            .replace(/\s+/g, ' ')          
+            .replace(/[,\s]+$/, '')          
+            .replace(/\s*\(\s*/g, ' (');   
 
         return out
             .split(' ')
@@ -105,17 +91,14 @@ realTime(text, isItemName = false) {
     _formatWord(word, index, isItemName) {
         if (!word) return word;
 
-        // ALL-CAPS abbreviations — preserve (only for non-item-name fields)
         if (!isItemName && word === word.toUpperCase() && word.length > 1) return word;
 
         const lower = word.toLowerCase();
 
         if (isItemName) {
-            // item_name: capitalize every word, no exceptions
             return this._capitalize(word, false);
         }
 
-        // item_code / description: keep articles/prepositions lowercase except at start
         if (index !== 0 && this.lowercaseWords.has(lower)) return lower;
 
         return this._capitalize(word, false);
@@ -126,33 +109,29 @@ realTime(text, isItemName = false) {
 //  Form Handler
 // ─────────────────────────────────────────────
 const FormHandler = {
-    timeouts:    {},
-    lastValues:  {},
+    timeouts: {},
+    lastValues: {},
 
-    /**
-     * Unified field handler.
-     * settingKey: the automation flag in Settings for Automation that DISABLES formatting.
-     */
-handleItemField(frm, fieldname, settingKey, formatFn, realTimeFn) {
-    if (!frm.doc.custom_automate) return;
+    handleItemField(frm, fieldname, settingKey, formatFn, realTimeFn) {
+        if (!frm.doc.custom_automate) return;
 
 
-    clearTimeout(this.timeouts[fieldname]);
-    this.timeouts[fieldname] = setTimeout(() => {
-        AutomationSettings.get((s) => {
-            if (!s.enable_item_automation || s[settingKey]) return;
+        clearTimeout(this.timeouts[fieldname]);
+        this.timeouts[fieldname] = setTimeout(() => {
+            AutomationSettings.get((s) => {
+                if (!s.enable_item_automation || s[settingKey]) return;
 
-            const value = frm.doc[fieldname] || '';
-            if (this.lastValues[fieldname] === value) return;
+                const value = frm.doc[fieldname] || '';
+                if (this.lastValues[fieldname] === value) return;
 
-            if (value.endsWith(' ')) return;
+                if (value.endsWith(' ')) return;
 
-            const formatted = formatFn(value);
-            this.lastValues[fieldname] = formatted;
-            if (formatted !== value) frm.set_value(fieldname, formatted);
-        });
-    }, 300);
-},
+                const formatted = formatFn(value);
+                this.lastValues[fieldname] = formatted;
+                if (formatted !== value) frm.set_value(fieldname, formatted);
+            });
+        }, 300);
+    },
     cleanup(frm, fields) {
         Object.values(this.timeouts).forEach(clearTimeout);
         this.timeouts = {};
@@ -205,7 +184,6 @@ frappe.ui.form.on('Item', {
             (t) => ItemTextFormatter.realTime(t, true)
         );
 
-        // Sync description AFTER debounce completes (avoid race condition)
         clearTimeout(FormHandler.timeouts['_desc_sync']);
         FormHandler.timeouts['_desc_sync'] = setTimeout(() => {
             if (frm.doc.item_name) frm.set_value('description', frm.doc.item_name);
