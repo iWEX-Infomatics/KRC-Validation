@@ -174,7 +174,7 @@ doc_events = {
         ]
     },
     "Bank Account": {
-        "before_save": "automate.customization.bank_account.set_bank_account_name"
+        "before_validate": "automate.customization.bank_account.set_bank_account_name"
     }
 }
 # Scheduled Tasks
