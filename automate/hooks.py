@@ -46,10 +46,9 @@ app_license = "mit"
 doctype_js = {
     "Supplier" : "public/js/supplier_name.js",
     "Customer" : "public/js/customer_name.js",
-    "Email Account":"public/js/email_account.js",
-    "Notification":"public/js/notifications.js",
     "Contact" : "public/js/contact_name.js",
     "Batch" : "public/js/batch_name.js",
+    "Address" : "public/js/address.js",
     "Employee" : "public/js/employee_name.js",
     "Item" : "public/js/item_name.js",
     "Item Group" : "public/js/item_group.js",
@@ -173,6 +172,9 @@ doc_events = {
         "validate": [
             "automate.customization.item.set_item_defaults"
         ]
+    },
+    "Bank Account": {
+        "before_save": "automate.customization.bank_account.set_bank_account_name"
     }
 }
 # Scheduled Tasks
