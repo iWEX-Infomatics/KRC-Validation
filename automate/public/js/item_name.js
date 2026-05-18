@@ -279,15 +279,27 @@ function clearNonEmptyTaxRows(frm) {
 }
 
 function setupTaxRows(frm, percentage) {
-    frm.clear_table('taxes');
-    frm.refresh_field('taxes');
 
-    ['In-State', 'Out-State', 'Reverse Charge In-State', 'Reverse Charge Out-State']
-        .forEach(category => {
-            const child = frm.add_child('taxes');
-            child.item_tax_template = `GST ${percentage} - AT`;
-            child.tax_category = category;
+    const company = frappe.defaults.get_default("company");
+
+    frappe.db.get_value("Company", company, "abbr")
+        .then(r => {
+
+            const abbr = r.message.abbr;
+
+            frm.clear_table('taxes');
+            frm.refresh_field('taxes');
+
+            ['In-State', 'Out-State', 'Reverse Charge In-State', 'Reverse Charge Out-State']
+                .forEach(category => {
+
+                    const child = frm.add_child('taxes');
+
+                    child.item_tax_template = `GST ${percentage} - ${abbr}`;
+
+                    child.tax_category = category;
+                });
+
+            frm.refresh_field('taxes');
         });
-
-    frm.refresh_field('taxes');
 }
