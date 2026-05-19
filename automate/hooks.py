@@ -170,7 +170,8 @@ doc_events = {
 
     "Item": {
         "validate": [
-            "automate.customization.item.set_item_defaults"
+            "automate.customization.item.set_item_defaults",
+            "automate.customization.item.set_tax_percentage_from_template",
         ]
     },
     "Bank Account": {
