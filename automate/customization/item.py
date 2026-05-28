@@ -101,3 +101,7 @@ def set_tax_percentage_from_template(doc, method=None):
             "item_tax_template": template,
             "tax_category": category
         })
+    
+
+
+
