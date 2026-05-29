@@ -112,9 +112,11 @@ const FormHandler = {
     timeouts: {},
     lastValues: {},
 
-    handleItemField(frm, fieldname, settingKey, formatFn, realTimeFn) {
-        if (!frm.doc.custom_automate) return;
+handleItemField(frm, fieldname, settingKey, formatFn, realTimeFn) {
 
+    if (fieldname === "description") return;
+
+    if (!frm.doc.custom_automate) return;
 
         clearTimeout(this.timeouts[fieldname]);
         this.timeouts[fieldname] = setTimeout(() => {
@@ -190,13 +192,43 @@ frappe.ui.form.on('Item', {
         }, 350);
     },
 
-    description(frm) {
-        FormHandler.handleItemField(
-            frm, 'description', 'description_automation',
-            (t) => ItemTextFormatter.full(t, false),
-            (t) => ItemTextFormatter.realTime(t, false)
-        );
-    },
+description(frm) {
+    if (!frm.doc.custom_automate) return;
+
+    clearTimeout(FormHandler.timeouts.description);
+
+    FormHandler.timeouts.description = setTimeout(() => {
+
+        const editor = frm.fields_dict.description?.quill;
+
+        if (!editor) return;
+
+        let text = editor.getText();
+
+        const trailingSpace = text.endsWith(" ");
+
+        if (!text.trim()) return;
+
+        let formatted = ItemTextFormatter.realTime(text, false);
+
+        if (trailingSpace) {
+            formatted += " ";
+        }
+
+        if (formatted === text) return;
+
+        let range = editor.getSelection();
+
+        editor.setText(formatted);
+
+        if (range) {
+            editor.setSelection(range.index, range.length);
+        }
+
+        frm.doc.description = `<p>${formatted}</p>`;
+
+    }, 50);
+},
 
     item_group(frm) {
         frm.set_value('is_stock_item', frm.doc.item_group === 'Services' ? 0 : 1);
